@@ -4,6 +4,7 @@
 
 import unittest
 from unittest.mock import patch
+from parameterized import parameterized
 from client import GithubOrgClient
 
 
@@ -11,36 +12,15 @@ class TestGithubOrgClient(unittest.TestCase):
     """Test GithubOrgClient class
     """
 
-    @patch('client.get_json')
-    def test_public_repos(self, mock_get_json):
-        """Test that public_repos returns the correct list of repositories
+    @parameterized.expand([
+        ({"license": {"key": "my_license"}}, "my_license", True),
+        ({"license": {"key": "other_license"}}, "my_license", False),
+    ])
+    def test_has_license(self, repo, license_key, expected):
+        """Test the has_license method
         """
-
-        # Define the URL and payload
-        test_url = "https://api.github.com/orgs/test-org/repos"
-        test_payload = [
-            {"name": "repo1", "license": {"key": "mit"}},
-            {"name": "repo2", "license": {"key": "apache"}},
-        ]
-        expected_repos = ["repo1", "repo2"]
-
-        # Mock get_json to return the test payload
-        mock_get_json.return_value = test_payload
-
-        # Patch _public_repos_url property
-        with patch.object(
-            GithubOrgClient, '_public_repos_url', return_value=test_url
-        ):
-            client = GithubOrgClient("test-org")
-
-            # Call the public_repos method
-            result = client.public_repos()
-
-            # Assert the result is as expected
-            self.assertEqual(result, expected_repos)
-
-            # Assert get_json was called once with the expected URL
-            mock_get_json.assert_called_once_with(test_url)
+        result = GithubOrgClient.has_license(repo, license_key)
+        self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':
