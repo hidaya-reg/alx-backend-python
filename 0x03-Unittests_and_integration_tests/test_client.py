@@ -3,7 +3,7 @@
 import unittest
 from client import GithubOrgClient
 from parameterized import parameterized
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -25,6 +25,20 @@ class TestGithubOrgClient(unittest.TestCase):
             f"https://api.github.com/orgs/{org_name}"
         )
         self.assertEqual(result, mock_org_data)
+
+    @patch('client.GithubOrgClient.org', new_callable=PropertyMock)
+    def test_public_repos_url(self, mock_org):
+        """Test that GithubOrgClient._public_repos_url returns correct URL"""
+        mock_org.return_value = {
+            "repos_url": "https://api.github.com/orgs/test_org/repos"
+        }
+
+        client = GithubOrgClient("test_org")
+
+        result = client._public_repos_url
+        expected_url = "https://api.github.com/orgs/test_org/repos"
+
+        self.assertEqual(result, expected_url)
 
 
 if __name__ == '__main__':
